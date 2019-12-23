@@ -1,65 +1,55 @@
 #include<iostream>
-#include<set>
+#include<queue>
 #include<vector>
-#include<algorithm>
-
 using namespace std;
 
-#define MAX_COST 999999
+const int INF = 9999999;
 int V,E,R; //V:Vertex, E:Edge, R:Root_Vertex
 
-struct Edge {
-  int begin, dest, cost;
-};
-
-vector<Edge> EdgeMap[20001]; // {dest, cost}
-int CostTable[20001]={0};
-bool Visited[20001]={0};
-
-struct compareEdge{
-  bool operator()(const Edge& e1, const Edge& e2){
-    return e1.cost < e2.cost ? true : false;
-  }
-};
+vector<pair<int,int>> edges[20001];
+int costs[20001];
+bool Visited[20001];
 
 void dijkstra(){
-  //declare set for prioirity_queue
-  set<Edge,compareEdge> edgeSet;
-  edgeSet.emplace(Edge{R,R,0});
+  // define prioirity_queue
+  priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+  pq.push(make_pair(0, R)); 
   
-  while(not edgeSet.empty()){
-    auto prev = edgeSet.begin(); edgeSet.erase(prev); // pop
-    if(Visited[prev->dest] == true) continue;
-    Visited[prev->dest] = true; 
-    
-    for(const auto& route : EdgeMap[prev->dest]){
-      if( Visited[route.dest] == true
-	  || CostTable[route.dest] <= CostTable[route.begin] + route.cost ) continue;
-      CostTable[route.dest] = CostTable[route.begin] + route.cost;
-      edgeSet.emplace(Edge{route.begin,route.dest,CostTable[route.dest]});
+  while (!pq.empty()) {
+    int cost = pq.top().first;
+    int from = pq.top().second;
+    pq.pop();
+
+    if (costs[from]<cost) continue;
+        
+    for(auto edge : edges[from]){
+      if(costs[edge.first] > edge.second + cost){
+        costs[edge.first] = edge.second + cost;
+        pq.push(make_pair(costs[edge.first],edge.first)); 
+      }
     }
   }
   return;
-}
+};
 
 int main(){
-  ios::sync_with_stdio(false);
+  ios_base::sync_with_stdio(false);
   cin.tie(nullptr);
+
   cin>>V>>E>>R;
-  
-  for(int i=1; i<=V; ++i) CostTable[i]=MAX_COST;
-  CostTable[R]=0;
+  for(int i=0; i<=V; ++i) costs[i]=INF;
+  costs[R]=0;
  
   int begin, dest, cost;
-  for(int i=1; i<=E; ++i){
+  for(int i=0; i<E; ++i){
     cin>>begin>>dest>>cost;
-    EdgeMap[begin].push_back(Edge{begin,dest,cost});
+    edges[begin].push_back(make_pair(dest,cost));
   }
   dijkstra();
 
   for(int i=1; i<=V; ++i){
-    if(CostTable[i] == MAX_COST) cout<<"INF\n";
-    else cout<<CostTable[i]<<"\n";
+    if(costs[i] == INF) cout<<"INF\n";
+    else cout<<costs[i]<<"\n";
   }
   return 0;
 }
