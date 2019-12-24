@@ -1,60 +1,73 @@
 #include<iostream>
-#include<algorithm>
 #include<vector>
+#include<queue>
 using namespace std;
 
-#define INF 100000 
-int T, N, M, K;
-int s,d,c,t;
+const int INF = 1000000;
+int T, N, M, K; // Test Case, Number of Airports, Maximum budget, Number of tickets
+int s,d,c,t, minCost=INF;
 int costTable[101][10001];
+int minCosts[101];
 
-struct route{ int dest, cost, time; };
-vector<route> tickets[100];
-
+struct route{
+  int dest, cost, time;
+ };
 
 int main(){
-  ios::sync_with_stdio(false);
-  cin.tie(NULL);
+  ios_base::sync_with_stdio(false);
+  cin.tie(nullptr);
+  cout.tie(nullptr);
 
   cin>>T;
   while(T--){
+    // Each test case
     cin>>N>>M>>K;
-  
+    vector<route> tickets[N+1];    
+    minCost=INF;
+
+    // Clear i-th row of costTable 
+    for(int i=1; i<=N; ++i) for(int j=0; j<=M; ++j) costTable[i][j] = INF;
+    costTable[1][0] = 0;
+    
     for(int i=0; i<K; ++i){
       cin>>s>>d>>c>>t;
       tickets[s].emplace_back(route{d,c,t});
     }
   
-    for(int i=1; i<=N; ++i){
-      // Clear i-th row of costTable
-      fill(begin(costTable[i]),end(costTable[i]),INF);
-      costTable[1][0] = 0;
+    // Set starting airports
+    priority_queue<pair<int,pair<int,int>>,vector<pair<int,pair<int,int>>>,greater<pair<int,pair<int,int>>>> pq;
+    pq.push({0,{0,1}});
+    
+    while(not pq.empty()){
+      // top & pop
+      int delay = pq.top().first;
+      int spent = pq.top().second.first;
+      int from = pq.top().second.second;
+      pq.pop();
+      
+      if (from == N) break;
 
-      // Iterate over cities
-      for(int from=1; from<=M; ++from){
-	// Iterate over tickets
-	for(int idx=0; idx<tickets[from].size(); ++idx){
-	  d = tickets[from][idx].dest;
-	  c = tickets[from][idx].cost;
-	  t = tickets[from][idx].time;	  	  
-	  
-	  for(int spent=0; spent<=M; ++spent){	    
-	    if(c+spent > M) break;
-	    if(costTable[from][spent]>=INF) continue;	    
-	    costTable[d][spent+c] = min(costTable[d][spent+c], costTable[from][spent]+t);
-	  }	  
+      //cout<<"Pop: "<<from<<", "<<spent<<endl;
+      if(spent==M || delay > costTable[from][spent] ) continue;
 
-
-
-	}
-
-
+      // Iterate over tickets
+      for(auto& route : tickets[from]){
+        d = route.dest;
+        c = route.cost + spent;
+        t = route.time + delay;
+	      if(c>M || costTable[d][c] <= t ) continue;
+        costTable[d][c] = t;
+        //cout<<"Update: "<<d<<", "<<c<<", "<<t<<endl;
+	      pq.push({t,{c,d}});
       }
+	  }
+
+    for(int i=0; i<=M; ++i){
+      minCost = min(minCost, costTable[N][i]);
     }
     
-
-
-
-  }
+    if (minCost<INF) cout<<minCost<<"\n";
+    else cout<<"Poor KCM\n";
+  } // end of while(T--) 
   return 0;
 }
