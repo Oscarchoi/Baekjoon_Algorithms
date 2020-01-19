@@ -3,6 +3,7 @@
 #include<queue>
 using namespace std;
 
+static int total = 0;
 struct Node {
   int root,cost,height=1;
 };
@@ -24,28 +25,24 @@ int find_root(int index){
 };
 
 void merge(int first, int second, int cost){
-  // already in same set
-  std::cout<<"root_of("<<first<<")="<<find_root(first)<<" root_of("<<second<<")="<<find_root(second)<<endl;
-  if(find_root(first) == find_root(second)) return;  
-  
+  // already in same set    
+    if(first == second ) return;   
+
   // put lower height tree into higher one
   Node& lhs = disjoint_set[first], &rhs = disjoint_set[second];      
   if(lhs.height >= rhs.height) {    
-    rhs.root = lhs.root;
-  
+    rhs.root = lhs.root;  
     lhs.height += rhs.height;
     rhs.height = 1;
     rhs.cost = cost;
   } else {
     lhs.root = rhs.root;
     rhs.height += lhs.height;
-    lhs.height = 1;
-    lhs.cost = cost;
+    lhs.height = 1;    
   }
-  std::cout<<"root_of("<<first<<")="<<find_root(first)<<" root_of("<<second<<")="<<find_root(second)<<endl;
-  
+  total += cost;
+  //std::cout<<"root_of("<<first<<")="<<find_root(first)<<" root_of("<<second<<")="<<find_root(second)<<endl;  
 };
-
 
 int V,E;
 
@@ -60,19 +57,13 @@ int main(){
     edges.emplace(Edge{a,b,c});
   }
 
-  for(int i=1; i<=10001; ++i){
-    disjoint_set[i].root = i;
-  }
+  for(int i=1; i<10001; ++i)
+    disjoint_set[i].root = i;  
 
   while(not edges.empty()){
-    Edge now = edges.top();
-    edges.pop();
-    merge(now.begin, now.dest, now.cost);    
+    Edge now = edges.top(); edges.pop();
+    merge(find_root(now.begin), find_root(now.dest), now.cost);    
   }
-
-  int total = 0;
-  for(int i=1; i<=V; ++i) total += disjoint_set[i].cost;  
   std::cout<<total<<"\n";
-
   return 0;
 }
